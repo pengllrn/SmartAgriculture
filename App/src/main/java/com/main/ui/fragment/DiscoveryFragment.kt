@@ -1,27 +1,28 @@
 package com.main.ui.fragment
 
-import android.net.Uri
+import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.base.ui.fragment.BaseFragment
-import com.base.utils.DateUtils
 import com.base.utils.GlideUtils
 import com.jph.takephoto.app.TakePhoto
 import com.jph.takephoto.app.TakePhotoImpl
-import com.jph.takephoto.compress.CompressConfig
 import com.jph.takephoto.model.InvokeParam
 import com.jph.takephoto.model.TContextWrap
 import com.jph.takephoto.model.TResult
 import com.jph.takephoto.permission.InvokeListener
 import com.jph.takephoto.permission.PermissionManager
 import com.jph.takephoto.permission.PermissionManager.TPermissionType
+import com.jph.takephoto.permission.TakePhotoInvocationHandler
+import com.main.utils.TakePhotoUtils
 import kotlinx.android.synthetic.main.fragment_discovery.*
 import java.io.File
+
+
 
 
 
@@ -49,9 +50,19 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mTakePhoto = TakePhotoImpl(this, this)
+        //以下两行代码激活mTakePhoto
+        mTakePhoto = TakePhotoInvocationHandler.of(this).bind(TakePhotoImpl(this, this)) as TakePhoto
+//        mTakePhoto.onCreate(savedInstanceState)
         mTakePhotoBt.setOnClickListener(this)
         mChoosePhotoTv.setOnClickListener(this)
+    }
+
+    /**
+     * 这段代码必须加！
+     */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        mTakePhoto.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun takeSuccess(result: TResult?) {
@@ -64,14 +75,18 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
     }
 
     override fun takeCancel() {
-        Toast.makeText(context, "取消选择", Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, "用户取消选择", Toast.LENGTH_SHORT).show()
     }
 
     override fun takeFail(result: TResult?, msg: String?) {
-        Toast.makeText(context, "选择失败", Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, "选择失败", Toast.LENGTH_SHORT).show()
         Log.e("TakePhoto", msg)
     }
 
+    /**
+     * 自动检查需要的权限：主要是相机以及存储权限 1
+     * 自动请求相应的权限： 2
+     */
     override fun invoke(invokeParam: InvokeParam): TPermissionType {
         val type: TPermissionType = PermissionManager.checkPermission(TContextWrap.of(this), invokeParam.getMethod())
         if (TPermissionType.WAIT.equals(type)) {
@@ -80,36 +95,10 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         return type
     }
 
-    override fun onClick(view: View) {
-        when (view.id) {
-            com.main.R.id.mTakePhotoBt -> {
-                createTempFile()
-                mTakePhoto.onPickFromCapture(Uri.fromFile(mTempFile))//没压缩
-            }
-
-            com.main.R.id.mChoosePhotoTv -> {
-                mTakePhoto.onEnableCompress(
-                    CompressConfig.ofDefaultConfig(),//这样每次拍照或者选择照片都会压缩
-                    false
-                )
-                mTakePhoto.onPickFromGallery()
-            }
-        }
-    }
-
-    fun createTempFile() {
-        val tempFileName = "${DateUtils.curTime}.png"  //文件名
-        //判断SD卡是否可用
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            //生成了临时文件对象
-            this.mTempFile = File(Environment.getExternalStorageDirectory(), tempFileName)
-            return
-        }
-
-        //filesDir是系统获取的
-        this.mTempFile = File(activity?.filesDir, tempFileName)
-    }
-
+    /**
+     * 需要初始化 invokeParam
+     * 处理权限请求结果 3
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         //以下代码为处理Android6.0、7.0动态权限所需
@@ -118,5 +107,22 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
     }
 
 
+
+    override fun onClick(view: View) {
+        mTakePhoto.onEnableCompress(//这样每次拍照或选择照片都会压缩
+            TakePhotoUtils.getConfigOfCompress(400000,600,600),
+            false//不显示压缩进度
+        )
+        when (view.id) {
+            com.main.R.id.mTakePhotoBt -> {
+                mTakePhoto.onPickFromCaptureWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(600,600))
+            }
+
+            com.main.R.id.mChoosePhotoTv -> {
+                mTakePhoto.setTakePhotoOptions(TakePhotoUtils.getConfigTakePhoto())
+                mTakePhoto.onPickFromGalleryWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(600,600))
+            }
+        }
+    }
 
 }
