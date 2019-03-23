@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">BaseLibrary</string>
+
+    <!--BottomNavigationBar-->
+    <string name="nav_bar_discovery">发现</string>
+    <string name="nav_bar_explore">探索</string>
+    <string name="nav_bar_collection">收藏</string>
+    <string name="nav_bar_user">我</string>
+</resources>

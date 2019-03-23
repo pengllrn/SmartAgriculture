@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <Button
+        android:id="@+id/mTakePhotoBt"
+        android:layout_width="220dp"
+        android:layout_height="60dp"
+        android:background="@drawable/btn_main_take_photo"
+        android:drawableLeft="@drawable/camera_white_36dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="15dp"
+        android:text="拍照识虫"
+        android:textColor="@color/common_white"
+        android:textSize="30dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="15dp"/>
+    <TextView
+        android:id="@+id/mChoosePhotoTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="从相册选择"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16dp"
+        android:layout_gravity="center"
+        android:drawableRight="@drawable/nav_right_arrow"
+        android:gravity="center"
+        android:paddingLeft="5dp"/>
+
+    <ImageView
+        android:id="@+id/mImageIv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+
+</LinearLayout>
