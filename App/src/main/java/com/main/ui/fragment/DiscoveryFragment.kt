@@ -70,16 +70,20 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         Log.d("TakePhoto", result?.image?.originalPath)//源地址
         Log.d("TakePhoto", result?.image?.compressPath)//压缩后的地址
         //上传头像
+        val file2 = File(result?.image?.originalPath)
         mLocalFilePath = result?.image?.compressPath
+        val file = File(mLocalFilePath)
+        Log.d("TakePhoto", "原图片的大小：${file2.length()/1024}KB")
+        Log.d("TakePhoto", "压缩后的大小：${file.length()/1024}KB")
         GlideUtils.loadImage(context!!,mLocalFilePath!!,mImageIv)
     }
 
     override fun takeCancel() {
-        Toast.makeText(activity, "用户取消选择", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "用户取消选择", Toast.LENGTH_SHORT).show()
     }
 
     override fun takeFail(result: TResult?, msg: String?) {
-        Toast.makeText(activity, "选择失败", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "选择失败", Toast.LENGTH_SHORT).show()
         Log.e("TakePhoto", msg)
     }
 
@@ -115,12 +119,12 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         )
         when (view.id) {
             com.main.R.id.mTakePhotoBt -> {
-                mTakePhoto.onPickFromCaptureWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(600,600))
+                mTakePhoto.onPickFromCaptureWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(400,600))
             }
 
             com.main.R.id.mChoosePhotoTv -> {
                 mTakePhoto.setTakePhotoOptions(TakePhotoUtils.getConfigTakePhoto())
-                mTakePhoto.onPickFromGalleryWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(600,600))
+                mTakePhoto.onPickFromGalleryWithCrop(TakePhotoUtils.createTempFile(),TakePhotoUtils.getCropOptions(400,600))
             }
         }
     }

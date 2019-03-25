@@ -40,7 +40,7 @@ object TakePhotoUtils {
     fun getCropOptions(width: Int, height: Int): CropOptions {
         val builder: CropOptions.Builder = CropOptions.Builder()
         builder.setOutputX(width).setOutputY(height)
-        builder.setWithOwnCrop(false)//使用TakePhoto自带裁图工具（true）,使用第三方截图工具(false)
+        builder.setWithOwnCrop(true)//使用TakePhoto自带裁图工具（true）,使用第三方截图工具(false)
         return builder.create()
     }
 

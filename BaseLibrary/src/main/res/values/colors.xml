@@ -24,4 +24,6 @@
     <color name="transparent">#00000000</color>
     <color name="common_green">#0d961d</color>
     <color name="common_green_dark">#0d691d</color>
+
+    <color name="multiple_image_select_primaryDark">@color/colorPrimaryDark</color>
 </resources>
