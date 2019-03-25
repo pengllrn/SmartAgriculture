@@ -2,12 +2,13 @@ package com.main.ui.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.PopupWindow
 import android.widget.Toast
 import com.base.ui.fragment.BaseFragment
+import com.base.ui.view.CommonPopupWindow
 import com.base.utils.GlideUtils
 import com.jph.takephoto.app.TakePhoto
 import com.jph.takephoto.app.TakePhotoImpl
@@ -18,13 +19,10 @@ import com.jph.takephoto.permission.InvokeListener
 import com.jph.takephoto.permission.PermissionManager
 import com.jph.takephoto.permission.PermissionManager.TPermissionType
 import com.jph.takephoto.permission.TakePhotoInvocationHandler
+import com.main.R
 import com.main.utils.TakePhotoUtils
 import kotlinx.android.synthetic.main.fragment_discovery.*
 import java.io.File
-
-
-
-
 
 /**
  * Author：pengllrn
@@ -43,6 +41,10 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
 
     private lateinit var mTakePhoto: TakePhoto
 
+    private lateinit var window : CommonPopupWindow
+
+    private lateinit var parent:View
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         return inflater.inflate(com.main.R.layout.fragment_discovery, null)
@@ -55,6 +57,7 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
 //        mTakePhoto.onCreate(savedInstanceState)
         mTakePhotoBt.setOnClickListener(this)
         mChoosePhotoTv.setOnClickListener(this)
+        parent = view
     }
 
     /**
@@ -76,6 +79,48 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         Log.d("TakePhoto", "原图片的大小：${file2.length()/1024}KB")
         Log.d("TakePhoto", "压缩后的大小：${file.length()/1024}KB")
         GlideUtils.loadImage(context!!,mLocalFilePath!!,mImageIv)
+        initPopupWindow()
+        showPopupWindow(parent)
+    }
+
+    fun initPopupWindow(){
+        val metrics = DisplayMetrics()
+        activity!!.windowManager.defaultDisplay.getMetrics(metrics)
+        val screenHeight = metrics.heightPixels
+        window = object : CommonPopupWindow(context!!, R.layout.popupwindow_layout,ViewGroup.LayoutParams.MATCH_PARENT,
+            (screenHeight * 0.7).toInt()){
+            override fun initView() {
+                val view = contentView
+                //显示布局
+
+            }
+
+            override fun initEvent() {
+            }
+
+            override fun initWindow(){
+                super.initWindow()
+                mInstance.setOnDismissListener {
+                    val lp = activity!!.window.attributes
+                    lp.alpha = 1.0f
+                    activity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                    activity!!.window.attributes = lp
+                }
+            }
+
+        }
+    }
+
+    fun showPopupWindow(view:View){
+        val win : PopupWindow =window.mInstance
+        win.animationStyle = R.style.animTranslate
+        window.showAtLocation(view,Gravity.BOTTOM,0,0)
+        val lp = activity!!.window.attributes
+        lp.alpha = 0.4f
+        activity!!.window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        activity!!.window.attributes = lp
+
+
     }
 
     override fun takeCancel() {
