@@ -20,6 +20,7 @@ import com.jph.takephoto.permission.PermissionManager
 import com.jph.takephoto.permission.PermissionManager.TPermissionType
 import com.jph.takephoto.permission.TakePhotoInvocationHandler
 import com.main.R
+import com.main.service.impl.IdentifyObjectServiceImpl
 import com.main.utils.TakePhotoUtils
 import kotlinx.android.synthetic.main.fragment_discovery.*
 import java.io.File
@@ -55,13 +56,21 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         //以下两行代码激活mTakePhoto
         mTakePhoto = TakePhotoInvocationHandler.of(this).bind(TakePhotoImpl(this, this)) as TakePhoto
 //        mTakePhoto.onCreate(savedInstanceState)
-        mTakePhotoBt.setOnClickListener(this)
-        mChoosePhotoTv.setOnClickListener(this)
         parent = view
+        initView()
     }
 
     /**
-     * 这段代码必须加！
+     * 初始化视图
+     */
+    private fun initView(){
+        initPopupWindow()
+        mTakePhotoBt.setOnClickListener(this)
+        mChoosePhotoTv.setOnClickListener(this)
+        GlideUtils.loadUrlImage(context!!,"https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=3435467801,4046315248&fm=27&gp=0.jpg",mImageIv)
+    }
+    /**
+     * 这段代码必须加，不然没有回调
      */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -79,10 +88,26 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         Log.d("TakePhoto", "原图片的大小：${file2.length()/1024}KB")
         Log.d("TakePhoto", "压缩后的大小：${file.length()/1024}KB")
         GlideUtils.loadImage(context!!,mLocalFilePath!!,mImageIv)
-        initPopupWindow()
+
         showPopupWindow(parent)
+
+        IdentifyObjectServiceImpl().uploadImage()
+
     }
 
+    override fun takeCancel() {
+        Toast.makeText(context, "用户取消选择", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun takeFail(result: TResult?, msg: String?) {
+        Toast.makeText(context, "选择失败", Toast.LENGTH_SHORT).show()
+        Log.e("TakePhoto", msg)
+    }
+
+    /**
+     * 初始化popupwindow，对popupwindow上的view进行操作
+     * 消失动画
+     */
     fun initPopupWindow(){
         val metrics = DisplayMetrics()
         activity!!.windowManager.defaultDisplay.getMetrics(metrics)
@@ -102,7 +127,7 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
                 super.initWindow()
                 mInstance.setOnDismissListener {
                     val lp = activity!!.window.attributes
-                    lp.alpha = 1.0f
+                    lp.alpha = 1.0f  //完全透明
                     activity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
                     activity!!.window.attributes = lp
                 }
@@ -111,6 +136,10 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         }
     }
 
+    /**
+     * 设置popupWindow的显示
+     * 包括动画，不透明度，出现位置等
+     */
     fun showPopupWindow(view:View){
         val win : PopupWindow =window.mInstance
         win.animationStyle = R.style.animTranslate
@@ -119,18 +148,8 @@ class DiscoveryFragment : BaseFragment(), TakePhoto.TakeResultListener,
         lp.alpha = 0.4f
         activity!!.window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         activity!!.window.attributes = lp
-
-
     }
 
-    override fun takeCancel() {
-        Toast.makeText(context, "用户取消选择", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun takeFail(result: TResult?, msg: String?) {
-        Toast.makeText(context, "选择失败", Toast.LENGTH_SHORT).show()
-        Log.e("TakePhoto", msg)
-    }
 
     /**
      * 自动检查需要的权限：主要是相机以及存储权限 1
